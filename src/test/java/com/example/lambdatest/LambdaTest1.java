@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 
 public class LambdaTest1 {
 
-
-
     @Test
     public void test1() {
         List<String> list = Arrays.asList("Lambdas", "Default Method", "Stream API", "Date and Time API");
@@ -33,6 +31,27 @@ public class LambdaTest1 {
         }))).values().stream().map(Optional::get).collect(Collectors.toList());
 
         System.out.println(collect);
+    }
+
+    @Test
+    public void test2(){
+        List<String> list = Arrays.asList("Lambdas", "Default Method", "Stream API", "Date and Time API");
+
+        User user1 = new User("Tom", BigDecimal.valueOf(23l), "96968686");
+        User user2 = new User("Cat", BigDecimal.valueOf(24l), "10086000");
+        User user3 = new User("Storm", BigDecimal.valueOf(25l), "89898989");
+        User user4 = new User("HBase", BigDecimal.valueOf(26l), "85858585");
+        User user5 = new User("Hadoop", BigDecimal.valueOf(26l), "78787878");
+        List<User> userList = new ArrayList<>();
+        userList.add(user1);
+        userList.add(user2);
+        userList.add(user3);
+        userList.add(user4);
+        userList.add(user5);
+
+        List<List<User>> values = new ArrayList<>(userList.stream().collect(Collectors.groupingBy(User::getAge)).values());
+
+        System.out.println(values);
     }
 
     public class User {
