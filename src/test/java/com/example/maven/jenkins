@@ -1,0 +1,11 @@
+一、打包部署软件jenkins的基本运行过程
+
+
+
+1、当开发人员提交最新代码时触发钩子程序通知jenkins
+
+2、jenkins调用git插件获取最新的源码
+
+3、jenkins再调用maven插件对源码进行打包，打成jar包
+
+4、最后调用Deploy to web container插件将打成的jar包部署到服务器上
