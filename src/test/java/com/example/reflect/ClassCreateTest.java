@@ -2,6 +2,8 @@ package com.example.reflect;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 
 /**
  * 简单的java类的静态代码块，代码块和构造方法执行顺序测试
@@ -13,6 +15,14 @@ public class ClassCreateTest {
          Create create = new Create(300,400);
 
         System.out.println(create);
+    }
+
+    @Test
+    public void test1(){
+        Class<Sub> clazz = Sub.class;
+        System.out.println("============================AnnotatedElement===========================");
+        System.out.println(Arrays.toString(clazz.getAnnotations()));    //获取自身和父亲的注解。如果@ATable未加@Inherited修饰，则获取的只是自身的注解而无法获取父亲的注解。
+        System.out.println("------------------");
     }
 }
 

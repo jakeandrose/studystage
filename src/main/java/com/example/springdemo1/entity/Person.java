@@ -1,15 +1,14 @@
 package com.example.springdemo1.entity;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class Person {
 
-    @Value("${person.name}")
+//    @Value("${person.name}")
     private String name;
 
-    @Value("${person.age}")
+//    @Value("${person.age}")
     private Integer age;
 
     public Person() {
