@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LambdaExam {
@@ -84,19 +85,14 @@ public class LambdaExam {
         scores.add(new Score("06" , "03" , 34));
         scores.add(new Score("07" , "02" , 89));
         scores.add(new Score("07" , "03" , 98));
-
-
-
     }
 
 
     /**
-     * 查询"01"课程比"02"课程成绩高的学生的信息及课程分数
+     *  使用lambda表达式计算出每个学生的总成绩
      */
     @Test
     public void test1(){
-
-
          scores.stream().collect(Collectors.groupingBy(Score::getsId,
                 Collectors.reducing((t1, t2) -> {
                     t1.setsScore(t1.getsScore() + t2.getsScore());
@@ -104,7 +100,94 @@ public class LambdaExam {
                 }))).values().stream().forEach(item -> {
              System.out.println(item.get());
          });
+    }
 
+    /**
+     *  查询平均成绩大于等于60分的同学的学生编号和学生姓名和平均成绩
+     */
+    @Test
+    public void test2(){
+        Map<String, Double> collect = scores.stream().collect(Collectors.groupingBy(Score::getsId,
+                Collectors.averagingDouble(Score::getsScore)));
+
+        Map<String, List<Student>> stuMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
+
+        for (Map.Entry<String,Double> entry : collect.entrySet()){
+            String sId = entry.getKey();
+            Student student = stuMap.get(sId).get(0);
+            System.out.println("学生编号：" + student.getsId() + "，学生姓名：" + student.getsName() + ",平均成绩:" + entry.getValue());
+        }
+    }
+
+    /**
+     * 查询所有同学的学生编号、学生姓名、选课总数、所有课程的总成绩
+     */
+    @Test
+    public void test3(){
+        Map<String, List<Score>> collect = scores.stream().collect(Collectors.groupingBy(Score::getsId));
+
+        Map<String, List<Student>> stuMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
+
+
+        for (Map.Entry<String,List<Score>> entry : collect.entrySet()){
+            String sId = entry.getKey();
+            Student student = stuMap.get(sId).get(0);
+            int courseSize = entry.getValue().size();
+            int totalScore = entry.getValue().stream().reduce((t1, t2) -> {
+                t1.setsScore(t1.getsScore() + t2.getsScore());
+                return t1;
+            }).get().getsScore();
+            System.out.println("学生编号：" + student.getsId() + "，学生姓名：" + student.getsName()
+                    + ",选课数：" + courseSize + ",总成绩:" + totalScore);
+        }
 
     }
+
+
+    /**
+     * 查询"李"姓老师的数量
+     */
+    @Test
+    public void test4(){
+        long tcount = teachers.stream().filter(item -> {
+            if (item.gettName().startsWith("李")) {
+                return true;
+            } else {
+            }
+            return false;
+        }).count();
+
+        System.out.println("李姓老师的数量是 :" + tcount);
+    }
+
+    /*
+        查询没有学全所有课程的同学的信息
+     */
+    @Test
+    public void test5(){
+
+        /*
+            将学生按照学号进行分组成一个map，供后面查询学生时使用
+         */
+        Map<String, List<Student>> studentsMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
+
+        /*
+             将成绩集合按照学号进行分组形成一个map
+         */
+        Map<String, Long> collect = scores.stream().collect(Collectors.groupingBy(Score::getsId, Collectors.counting()));
+
+        /*
+            从map集合中筛选出没有学全所有课程的记录
+         */
+        List<Map.Entry<String, Long>> scoresList = collect.entrySet().stream().filter(item -> item.getValue()  < courses.size()).collect(Collectors.toList());
+
+        /*
+           通过学号，到学生map中找到该学生，并将其信息输出
+         */
+        scoresList.stream().forEach(item -> {
+            List<Student> studentList = studentsMap.get(item.getKey());
+            System.out.println(studentList.get(0));
+        });
+    }
 }
+
