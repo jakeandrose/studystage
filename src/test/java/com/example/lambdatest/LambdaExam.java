@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LambdaExam {
@@ -87,106 +88,92 @@ public class LambdaExam {
         scores.add(new Score("07" , "03" , 98));
     }
 
-
     /**
-     *  使用lambda表达式计算出每个学生的总成绩
+     *  查询"01"课程比"02"课程成绩高的学生的信息及课程分数
      */
     @Test
-    public void test1(){
-         scores.stream().collect(Collectors.groupingBy(Score::getsId,
-                Collectors.reducing((t1, t2) -> {
-                    t1.setsScore(t1.getsScore() + t2.getsScore());
-                    return t1;
-                }))).values().stream().forEach(item -> {
-             System.out.println(item.get());
-         });
+     public void test1(){
+
+        /*
+             将成绩集合按照学号分组
+         */
+        Map<String, List<Score>> scoreMap = scores.stream().collect(Collectors.groupingBy(Score::getsId));
+
+        /*
+            将学生集合按照学号分组，以便后面根据学号取到学生对象
+         */
+        Map<String, List<Student>> stuMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
+
+
+        scoreMap.entrySet().stream().forEach(item -> {
+            /*
+               学号
+             */
+            String sId = item.getKey();
+
+            /*
+                成绩对象集合
+             */
+            List<Score> scoreList = item.getValue();
+
+            /*
+               因为是同一个学生，只需要比较01"课程比"02"课程成绩高就行
+             */
+            Map<String, List<Score>> cSMap = scoreList.stream().collect(Collectors.groupingBy(Score::getcId));
+            Score s1 = null;
+            Score s2 = null;
+
+
+            if (cSMap.get("01") != null){
+                s1 = cSMap.get("01").get(0);
+            }
+
+            if (cSMap.get("02") != null){
+                s2 = cSMap.get("02").get(0);
+            }
+
+
+            if (s1 != null && s2 != null && s1.getsScore() > s2.getsScore()){
+                Student s = stuMap.get(sId).get(0);
+                System.out.println("01课程比02课程成绩高的学生的信息："
+                        + s + "课程01的成绩：" + s1.getsScore() + "课程02的成绩：" + s2.getsScore());
+            }
+        });
     }
 
-    /**
-     *  查询平均成绩大于等于60分的同学的学生编号和学生姓名和平均成绩
+
+    /*
+       查询学过编号为"01"并且也学过编号为"02"的课程的同学的信息
      */
     @Test
     public void test2(){
-        Map<String, Double> collect = scores.stream().collect(Collectors.groupingBy(Score::getsId,
-                Collectors.averagingDouble(Score::getsScore)));
 
-        Map<String, List<Student>> stuMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
+        /*
+           将学生集合按学号进行分组，变成一个map，方便后面根据学号取相应的学生
+         */
+        Map<String, List<Student>> sMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
 
-        for (Map.Entry<String,Double> entry : collect.entrySet()){
-            String sId = entry.getKey();
-            Student student = stuMap.get(sId).get(0);
-            System.out.println("学生编号：" + student.getsId() + "，学生姓名：" + student.getsName() + ",平均成绩:" + entry.getValue());
-        }
-    }
-
-    /**
-     * 查询所有同学的学生编号、学生姓名、选课总数、所有课程的总成绩
-     */
-    @Test
-    public void test3(){
-        Map<String, List<Score>> collect = scores.stream().collect(Collectors.groupingBy(Score::getsId));
-
-        Map<String, List<Student>> stuMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
+        /*
+            将成绩集合按照学号进行分组，方便后面对map进行遍历的时候确保每一个元素对应的是同一个学生的所有成绩对象集合
+         */
+        Map<String, List<Score>> scoMap = scores.stream().collect(Collectors.groupingBy(Score::getsId));
 
 
-        for (Map.Entry<String,List<Score>> entry : collect.entrySet()){
-            String sId = entry.getKey();
-            Student student = stuMap.get(sId).get(0);
-            int courseSize = entry.getValue().size();
-            int totalScore = entry.getValue().stream().reduce((t1, t2) -> {
-                t1.setsScore(t1.getsScore() + t2.getsScore());
-                return t1;
-            }).get().getsScore();
-            System.out.println("学生编号：" + student.getsId() + "，学生姓名：" + student.getsName()
-                    + ",选课数：" + courseSize + ",总成绩:" + totalScore);
-        }
+        scoMap.entrySet().stream().forEach(item -> {
 
-    }
+            String sId = item.getKey();
 
+            /**
+             *  同一学生下的所有成绩对象
+             */
+            List<Score> scoreList = item.getValue();
+            Map<String, List<Score>> newScoMap = scoreList.stream().collect(Collectors.groupingBy(Score::getcId));
 
-    /**
-     * 查询"李"姓老师的数量
-     */
-    @Test
-    public void test4(){
-        long tcount = teachers.stream().filter(item -> {
-            if (item.gettName().startsWith("李")) {
-                return true;
-            } else {
+            if (Optional.ofNullable(newScoMap.get("01")).isPresent()
+                    && Optional.ofNullable(newScoMap.get("02")).isPresent()){
+
+                System.out.println("过编号为01并且也学过编号为02的课程的同学的信息：" + sMap.get(sId));
             }
-            return false;
-        }).count();
-
-        System.out.println("李姓老师的数量是 :" + tcount);
-    }
-
-    /*
-        查询没有学全所有课程的同学的信息
-     */
-    @Test
-    public void test5(){
-
-        /*
-            将学生按照学号进行分组成一个map，供后面查询学生时使用
-         */
-        Map<String, List<Student>> studentsMap = students.stream().collect(Collectors.groupingBy(Student::getsId));
-
-        /*
-             将成绩集合按照学号进行分组形成一个map
-         */
-        Map<String, Long> collect = scores.stream().collect(Collectors.groupingBy(Score::getsId, Collectors.counting()));
-
-        /*
-            从map集合中筛选出没有学全所有课程的记录
-         */
-        List<Map.Entry<String, Long>> scoresList = collect.entrySet().stream().filter(item -> item.getValue()  < courses.size()).collect(Collectors.toList());
-
-        /*
-           通过学号，到学生map中找到该学生，并将其信息输出
-         */
-        scoresList.stream().forEach(item -> {
-            List<Student> studentList = studentsMap.get(item.getKey());
-            System.out.println(studentList.get(0));
         });
     }
 }
