@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dao.mapper.second.TeacherMapper">
+
+    <!--使用resultMap将实体类中的属性和表中的列名一一对应-->
+    <resultMap id="teacherMap" type="com.example.entity.second.Teacher">
+        <id property="tId" column="t_id"></id>
+        <result property="tName" column="t_name"></result>
+        <result property="sId" column="s_id"></result>
+        <collection property="students" column="s_id" javaType="list" ofType="com.example.entity.second.Student" select="queryStudent"></collection>
+    </resultMap>
+
+   <select id="queryAll" resultMap="teacherMap">
+       select * from teacher
+   </select>
+
+    <select id="queryStudent" resultType="com.example.entity.second.Student">
+        select id,s_name as sName,t_id as tId from student where id = #{s_id}
+    </select>
+</mapper>
